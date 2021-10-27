@@ -51,10 +51,10 @@ function loadGua(g1, g2, f) {
 
 
         }
-        if (f === 0){
+        if (f === 0) {
             drawme(g1);
         }
-        if (f === 1){
+        if (f === 1) {
             drawme(g2);
         }
 
@@ -131,7 +131,7 @@ $(document).ready(function () {
 
         // yin[0].style = "background-position: right";
         // yang[0].style = "background-position: right";
-         //需要阻塞式等待。 settimeout是异步的
+        //需要阻塞式等待。 settimeout是异步的
 
         yin[0].style = "display:none";
         yang[0].style = "display:none";
@@ -139,22 +139,21 @@ $(document).ready(function () {
         // sleep(3339); //需要阻塞式等待。 settimeout是异步的
 
         taichi[0].style = "display:none;";
-        $.ajax({
-            url: 'http://localhost:8000/yi',
-            type: "get",
-            success: function (response) {
-                
-                location.hash = '';
-                console.log(response['m']);
 
+        if (Cookies.get('m')) {
+            m = Cookies.get('m');
+            s = Cookies.get('s');
+            c = Cookies.get('c');
+            console.log("来自cookie:", m, s, c);
+        } else {
+            $.ajax({
+                url: 'http://localhost:8000/yi',
+                type: "get",
+                success: function (response) {
 
-                if(Cookies.get('m')){
-                    m = Cookies.get('m');
-                    s = Cookies.get('s');
-                    c = Cookies.get('c');
-                    console.log("来自cookie:", m, s, c);
+                    location.hash = '';
+                    console.log(response['m']);
 
-                }else{
                     m = response['m'];
                     s = response['s'];
                     c = response['c'];
@@ -162,87 +161,85 @@ $(document).ready(function () {
                     var date = new Date();
                     date.setTime(date.getTime() + (24 * 60 * 60 * 1000));
 
-                    Cookies.set('m', m,{ expires: date });
-                    Cookies.set('s', s,{ expires: date });
-                    Cookies.set('c', c,{ expires: date });
+                    Cookies.set('m', m, { expires: date });
+                    Cookies.set('s', s, { expires: date });
+                    Cookies.set('c', c, { expires: date });
 
-                    console.log('一天一次:\t',m,s,c);
+                    console.log('一天一次:\t', m, s, c);
+
+                },
+                error: function () {
+                    console.log('error');
+                }
+            });
+
+        }
+
+        $.ajax({
+            url: 'static/gua.json',
+            dataType: 'json',
+            success: function (data) {
+                gb.gua = data.gua;
+                var hash = location.hash.replace('#', '');
+
+                if (hash === '') {
+
+                    if (c == 0) {
+                        // 主卦为原爻所得卦
+                        loadGua(m, s, 0);
+                        $('#gua-detail').text("主卦为: " + gb.selectedGua['gua-name']);
+                    }
+
+                    if (c == 6) {
+                        // 主卦为变爻所得卦
+                        loadGua(m, s, 1);
+                        $('#gua-detail').text("主卦为: " + gb.otherGua['gua-name']);
+                    }
+
+                    if (c == 1) {
+                        // 有一个变爻 查看所变之爻
+                        loadGua(m, s, 1);
+                        $('#gua-detail').text("原卦为: " + gb.otherGua['gua-name']);
+                    }
+
+                    if (c == 2) {
+                        // 原卦为主，参考变卦
+                        loadGua(m, s, 0);
+                        $('#gua-detail').text("主卦为: " + gb.selectedGua['gua-name'] + " 参考卦为: " + gb.otherGua['gua-name']);
+                    }
+
+                    if (c == 3) {
+                        // 两卦互参
+                        loadGua(m, s, 0);
+                        $('#gua-detail').text("两卦互参: " + gb.selectedGua['gua-name'] + " " + gb.otherGua['gua-name']);
+                    }
+
+                    if (c == 4 || c == 5) {
+                        // 变卦为主
+                        loadGua(m, s, 1);
+                        $('#gua-detail').text("主卦为: " + gb.otherGua['gua-name'] + " 参考卦为: " + gb.selectedGua['gua-name']);
+                    }
+
+                } else {
+                    if (!loadGua(hash)) {
+                        location.hash = '';
+                        loadGua('111111');
+                    }
                 }
 
+                location.hash = '';
 
-                $.ajax({
-                    url: 'static/gua.json',
-                    dataType: 'json',
-                    success: function (data) {
-                        gb.gua = data.gua;
-                        var hash = location.hash.replace('#', '');
-
-                        if (hash === '') {
-
-                            if (c == 0) {
-                                // 主卦为原爻所得卦
-                                loadGua(m, s, 0);
-                                $('#gua-detail').text("主卦为: " + gb.selectedGua['gua-name']);
-                            }
-
-                            if (c == 6) {
-                                // 主卦为变爻所得卦
-                                loadGua(m, s, 1);
-                                $('#gua-detail').text("主卦为: " + gb.otherGua['gua-name']);
-                            }
-
-                            if (c == 1) {
-                                // 有一个变爻 查看所变之爻
-                                loadGua(m, s, 1);
-                                $('#gua-detail').text("原卦为: " + gb.otherGua['gua-name']);
-                            }
-
-                            if (c == 2) {
-                                // 原卦为主，参考变卦
-                                loadGua(m, s, 0);
-                                $('#gua-detail').text("主卦为: " + gb.selectedGua['gua-name'] + " 参考卦为: " + gb.otherGua['gua-name']);
-                            }
-
-                            if (c == 3) {
-                                // 两卦互参
-                                loadGua(m, s, 0);
-                                $('#gua-detail').text("两卦互参: " + gb.selectedGua['gua-name'] + " " + gb.otherGua['gua-name']);
-                            }
-
-                            if (c == 4 || c == 5) {
-                                // 变卦为主
-                                loadGua(m, s, 1);
-                                $('#gua-detail').text("主卦为: " + gb.otherGua['gua-name'] + " 参考卦为: " + gb.selectedGua['gua-name']);
-                            }
-
-                        } else {
-                            if (!loadGua(hash)) {
-                                location.hash = '';
-                                loadGua('111111');
-                            }
-                        }
-
-                        location.hash = '';
-
-                        $('#back-title').on('click', function(){
-                            yin[0].style = "display:true";
-                            yang[0].style = "display:true";
-                            taichi[0].style = "display:true;";
-                        });
-                    },
-                    error: function (e) {
-                        alert('数据获取失败，请刷新重试！');
-                        _gaq.push(['_trackEvent', 'BianGua', 'No JSON', e.toString()]);
-                    }
+                $('#back-title').on('click', function () {
+                    yin[0].style = "display:true";
+                    yang[0].style = "display:true";
+                    taichi[0].style = "display:true;";
                 });
-
-
             },
-            error: function () {
-                console.log('error');
+            error: function (e) {
+                alert('数据获取失败，请刷新重试！');
+                _gaq.push(['_trackEvent', 'BianGua', 'No JSON', e.toString()]);
             }
-        })
-
+        });
 
     });
 
